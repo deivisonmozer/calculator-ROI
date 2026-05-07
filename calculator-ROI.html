@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Calculadora de ROI — Automação</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #f1f5f9;
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: #1e293b;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #334155;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-bottom: 14px;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+  }
+
+  label span {
+    color: #64748b;
+    font-size: 11px;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 16px;
+    color: #f1f5f9;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="number"]:focus {
+    border-color: #38bdf8;
+  }
+
+  input[type="number"]::placeholder {
+    color: #475569;
+  }
+
+  .prefix-field {
+    position: relative;
+  }
+
+  .prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .prefix-field input {
+    padding-left: 26px;
+  }
+
+  /* Results */
+  .results {
+    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    border-radius: 14px;
+    padding: 20px 16px;
+    margin-bottom: 14px;
+  }
+
+  .results-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 16px;
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .result-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .result-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .result-value.big {
+    font-size: 22px;
+    color: #fff;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin: 12px 0;
+  }
+
+  /* Pitch box */
+  .pitch {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  .pitch-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #f59e0b;
+    margin-bottom: 12px;
+  }
+
+  .pitch-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #e2e8f0;
+  }
+
+  .pitch-text strong {
+    color: #38bdf8;
+  }
+
+  /* Copy button */
+  .btn-copy {
+    width: 100%;
+    background: #f59e0b;
+    color: #0f172a;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-copy:active {
+    opacity: 0.8;
+  }
+
+  .copied {
+    background: #22c55e !important;
+    color: #fff !important;
+  }
+
+  .zero-state {
+    color: #475569;
+    font-size: 13px;
+    text-align: center;
+    padding: 10px 0;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<h1>💰 Calculadora de ROI</h1>
+<p class="subtitle">Mostre o retorno da automação em tempo real</p>
+
+<!-- INPUTS: SITUAÇÃO ATUAL -->
+<div class="card">
+  <div class="card-title">⏱️ Situação Atual do Cliente</div>
+
+  <div class="field">
+    <label>Horas gastas por semana nessa tarefa</label>
+    <input type="number" id="horas_semana" placeholder="ex: 10" min="0" oninput="calcular()">
+  </div>
+
+  <div class="field">
+    <label>Nº de pessoas que fazem essa tarefa</label>
+    <input type="number" id="pessoas" placeholder="ex: 2" min="1" oninput="calcular()">
+  </div>
+
+  <div class="field">
+    <label>Custo/hora médio por pessoa <span>(salário ÷ horas mês)</span></label>
+    <div class="prefix-field">
+      <span class="prefix">$</span>
+      <input type="number" id="custo_hora" placeholder="ex: 15" min="0" oninput="calcular()">
+    </div>
+  </div>
+</div>
+
+<!-- INPUTS: AUTOMAÇÃO -->
+<div class="card">
+  <div class="card-title">🤖 Parâmetros da Automação</div>
+
+  <div class="field">
+    <label>% da tarefa que será automatizada</label>
+    <input type="number" id="pct_auto" placeholder="ex: 80" min="0" max="100" oninput="calcular()">
+  </div>
+
+  <div class="field">
+    <label>Custo mensal da automação <span>(sua mensalidade)</span></label>
+    <div class="prefix-field">
+      <span class="prefix">$</span>
+      <input type="number" id="custo_auto" placeholder="ex: 297" min="0" oninput="calcular()">
+    </div>
+  </div>
+</div>
+
+<!-- RESULTADOS -->
+<div class="results" id="results-box">
+  <div class="results-title">📊 Resultado para o Cliente</div>
+  <div id="results-content">
+    <div class="zero-state">Preencha os campos acima para ver o resultado</div>
+  </div>
+</div>
+
+<!-- PITCH -->
+<div class="pitch" id="pitch-box" style="display:none">
+  <div class="pitch-title">🎤 Argumento Pronto para Usar</div>
+  <div class="pitch-text" id="pitch-text"></div>
+  <button class="btn-copy" onclick="copiarPitch()">📋 Copiar Argumento</button>
+</div>
+
+<script>
+function calcular() {
+  const horas = parseFloat(document.getElementById('horas_semana').value) || 0;
+  const pessoas = parseFloat(document.getElementById('pessoas').value) || 0;
+  const custoHora = parseFloat(document.getElementById('custo_hora').value) || 0;
+  const pctAuto = parseFloat(document.getElementById('pct_auto').value) || 0;
+  const custoAuto = parseFloat(document.getElementById('custo_auto').value) || 0;
+
+  if (!horas || !pessoas || !custoHora || !pctAuto) {
+    document.getElementById('results-content').innerHTML = '<div class="zero-state">Preencha os campos acima para ver o resultado</div>';
+    document.getElementById('pitch-box').style.display = 'none';
+    return;
+  }
+
+  const horasMes = horas * 4.3 * pessoas;
+  const custoAtualMes = horasMes * custoHora;
+  const horasEconomizadasMes = horasMes * (pctAuto / 100);
+  const economiaHorasMes = horasEconomizadasMes * custoHora;
+  const economiaLiquida = economiaHorasMes - custoAuto;
+  const roi = custoAuto > 0 ? ((economiaHorasMes - custoAuto) / custoAuto * 100) : 0;
+  const paybackDias = custoAuto > 0 ? Math.ceil(custoAuto / (economiaHorasMes / 30)) : 0;
+
+  const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  document.getElementById('results-content').innerHTML = `
+    <div class="result-row">
+      <span class="result-label">Custo atual (mensal)</span>
+      <span class="result-value">$${fmt(custoAtualMes)}</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Horas economizadas/mês</span>
+      <span class="result-value">${fmt(horasEconomizadasMes)}h</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Economia em $</span>
+      <span class="result-value">$${fmt(economiaHorasMes)}/mês</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Custo da automação</span>
+      <span class="result-value">– $${fmt(custoAuto)}/mês</span>
+    </div>
+    <hr class="divider">
+    <div class="result-row">
+      <span class="result-label">💵 Economia líquida</span>
+      <span class="result-value big">$${fmt(economiaLiquida)}/mês</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">📈 ROI</span>
+      <span class="result-value big">${fmt(roi)}%</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">⚡ Payback em</span>
+      <span class="result-value">${paybackDias} dias</span>
+    </div>
+  `;
+
+  // Gerar pitch
+  const pitchText = `Hoje você gasta <strong>$${fmt(custoAtualMes)}/mês</strong> em mão de obra só nessa tarefa. Com a automação, <strong>${pctAuto}% disso é eliminado</strong> — você economiza <strong>$${fmt(horasEconomizadasMes)}/mês</strong> em custo de pessoal. A automação custa <strong>$${fmt(custoAuto)}/mês</strong>. Ou seja: ganho líquido de <strong>$${fmt(economiaLiquida)} por mês</strong>, com ROI de <strong>${fmt(roi)}%</strong> e payback em <strong>${paybackDias} dias</strong>. No final do ano, você terá economizado <strong>$${fmt(economiaLiquida * 12)}</strong>.`;
+
+  document.getElementById('pitch-text').innerHTML = pitchText;
+  document.getElementById('pitch-box').style.display = 'block';
+}
+
+function copiarPitch() {
+  const pitch = document.getElementById('pitch-text').innerText;
+  navigator.clipboard.writeText(pitch).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '✅ Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copiar Argumento';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
